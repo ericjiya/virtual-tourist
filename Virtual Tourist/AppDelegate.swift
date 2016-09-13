@@ -12,6 +12,17 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    
+    func checkIfFirstLaunch() {
+        if(NSUserDefaults.standardUserDefaults().boolForKey("hasLaunchedBefore")){
+            print("App has launched before")
+        }else{
+            print("This is the first launch ever")
+            NSUserDefaults.standardUserDefaults().setBool(true, forKey: "hasLaunchedBefore")
+            NSUserDefaults.standardUserDefaults().setBool(false, forKey: "hasSavingRegion")
+            NSUserDefaults.standardUserDefaults().synchronize()
+        }
+    }
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
