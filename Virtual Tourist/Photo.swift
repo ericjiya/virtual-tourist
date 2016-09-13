@@ -12,9 +12,8 @@ import CoreData
 @objc(Photo)
 class Photo : NSManagedObject {
     
-    @NSManaged var filepath : String?
-    @NSManaged var url : String
-    
+    @NSManaged var filepath: String?
+    @NSManaged var url: String
     @NSManaged var pin: Pin?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -29,7 +28,6 @@ class Photo : NSManagedObject {
         
         // Dictionary
         self.url = dictionary[Constants.JSONResponseKeys.imageUrl] as! String
-        
         self.pin = pin
     }
     

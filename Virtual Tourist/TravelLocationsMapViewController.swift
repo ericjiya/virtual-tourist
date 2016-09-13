@@ -22,38 +22,57 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     
     var chosenPin: Pin!
     
+    var allPins = [Pin]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         
+        // Setup map
         mapView.delegate = self
         setMapRegion()
         
-        // define gestures
+        // Define gestures
         longPressGesture()
         
         //Fetch Pins
-        do{
-            try fetchedResultsController.performFetch()
-        }catch let e as NSError{
-            print("Error while trying to perform a search: \n\(e)\n\(fetchedResultsController)")
-        }
+        allPins = fetchAllPins()
+        
+//        do{
+//            try fetchedResultsController.performFetch()
+//        }catch let e as NSError{
+//            print("Error while trying to perform a search: \n\(e)\n\(fetchedResultsController)")
+//        }
         
         // Add pins on map
-        addPins()
+        addPinsOnMap()
         
     }
     
-    var fetchedResultsController: NSFetchedResultsController {
+    func fetchAllPins() -> [Pin] {
+        
+        // Create the Fetch Request
         let fetchRequest = NSFetchRequest(entityName: "Pin")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "longitude", ascending: false)]
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil,cacheName: nil)
         
-        fetchedResultsController.delegate = self
-        
-        return fetchedResultsController
+        // Execute the Fetch Request
+        do {
+            return try sharedContext.executeFetchRequest(fetchRequest) as! [Pin]
+        } catch  let error as NSError {
+            print("Error in fetchAllActors(): \(error)")
+            return [Pin]()
+        }
     }
+    
+//    var fetchedResultsController: NSFetchedResultsController {
+//        let fetchRequest = NSFetchRequest(entityName: "Pin")
+//        fetchRequest.sortDescriptors = []
+//        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil,cacheName: nil)
+//        
+//        fetchedResultsController.delegate = self
+//        
+//        return fetchedResultsController
+//    }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
@@ -67,23 +86,22 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
     // Add pins on map
-    func addPins(){
+    func addPinsOnMap(){
         var annotations = [Pin]()
         
-        if let pins = fetchedResultsController.fetchedObjects{
-            for pin in pins {
-                annotations.append(pin as! Pin)
+        if !allPins.isEmpty{
+            for pin in allPins {
+                annotations.append(pin)
             }
-        }
         
-        print("how many pins?\(annotations.count)")
-        self.mapView.addAnnotations(annotations)
+            print("how many pins? \(annotations.count)")
+            self.mapView.addAnnotations(annotations)
+        }
     }
     
     // set region
     func setMapRegion(){
         if(NSUserDefaults.standardUserDefaults().boolForKey("hasSavingRegion")){
-            
             if let savedRegion = NSUserDefaults.standardUserDefaults().objectForKey("myMapRegion") as? [String: Double] {
                 let center = CLLocationCoordinate2D(latitude: savedRegion["mapCenterLat"]!, longitude: savedRegion["mapCenterLng"]!)
                 let span = MKCoordinateSpan(latitudeDelta: savedRegion["mapSpanLat"]!, longitudeDelta: savedRegion["mapSpanLng"]!)
@@ -99,7 +117,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
         mapView.addGestureRecognizer(longPressGesRecognizer)
     }
     
-    // drop a new pin on map
+    // Drop a new pin on map
     func longTapMapAction(longPress: UILongPressGestureRecognizer){
         // handle long tap if edit mode is not active
         if !self.editMode{
@@ -153,6 +171,7 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
                                         photo.filepath = fileSavedPath
                                         //print("Saving photo url is \(photo.url), and file save at path: \(photo.filepath)")
                                         
+                                        // Save photo
                                         dispatch_async(dispatch_get_main_queue(), {
                                             CoreDataStackManager.sharedInstance().saveContext()
                                         })
@@ -212,13 +231,14 @@ class TravelLocationsMapViewController: UIViewController, MKMapViewDelegate, NSF
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
+        chosenPin = view.annotation as! Pin
+        
         if editMode {
             print("tap to delete")
-            chosenPin = view.annotation as! Pin
             
             // Remove pin from map
             dispatch_async(dispatch_get_main_queue(), {
-                self.mapView.removeAnnotation(self.chosenPin)
+                mapView.removeAnnotation(self.chosenPin)
             })
             
             // Delete pin from Core Data

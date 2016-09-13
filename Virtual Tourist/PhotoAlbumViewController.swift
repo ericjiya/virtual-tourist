@@ -36,28 +36,25 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         
         setPinMap(true)
         
-//        noImageLabel.text = "Testing"
-//        noImageLabel.textColor = UIColor.redColor()
+        photoCollectionView.delegate = self
+        photoCollectionView.dataSource = self
         
-        fetchedResultsController.delegate = self
+        
         // Fetch photos
         do{
-            print("Perform Fetching...")
+            //print("Perform Fetching...")
             try fetchedResultsController.performFetch()
         }catch let e as NSError{
             print("Error while trying to perform a search: \n\(e)\n\(fetchedResultsController)")
         }
         
         // check fetched photos
-        print("Fetched \(fetchedResultsController.fetchedObjects)")
+        print("Fetched \(fetchedResultsController.fetchedObjects?.count)")
         if fetchedResultsController.fetchedObjects?.count == 0 {
             print("No photos fetched!")
             newCollectionBtn.enabled = true
             self.noImageLabel.hidden = false
         }
-        
-        photoCollectionView.delegate = self
-        photoCollectionView.dataSource = self
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -96,8 +93,11 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         let fetchRequest = NSFetchRequest(entityName: "Photo")
         fetchRequest.sortDescriptors = []
         fetchRequest.predicate = NSPredicate(format: "pin == %@", self.selectedPin)
+        print("fetch request = \(fetchRequest)")
 
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        fetchedResultsController.delegate = self
         
         return fetchedResultsController
     }
@@ -109,6 +109,7 @@ class PhotoAlbumViewController: UIViewController, NSFetchedResultsControllerDele
         let savedRegion = MKCoordinateRegion(center: selectedPin.coordinate, span: span)
         mapView.setRegion(savedRegion, animated: animated)
         
+        // Other settings
         self.mapView.addAnnotation(selectedPin)
         self.mapView.zoomEnabled = false
         self.mapView.scrollEnabled = false

@@ -97,7 +97,6 @@ class FlickrClient: NSObject {
                 }
                 
             } else {
-                
                 completionHandlerForGET(result: nil, error: NSError(domain: "Results from Flickr", code: 0, userInfo: [NSLocalizedDescriptionKey: "This pin has no images."]))
             }
         }

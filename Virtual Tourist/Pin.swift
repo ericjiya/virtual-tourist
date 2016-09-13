@@ -15,10 +15,12 @@ import MapKit
 class Pin: NSManagedObject, MKAnnotation {
     
     struct Keys {
+        static let id = "id"
         static let latitude = "latitude"
         static let longitude = "longitude"
     }
     
+    @NSManaged var id: Int64
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
     @NSManaged var photos: [Photo]
@@ -31,6 +33,8 @@ class Pin: NSManagedObject, MKAnnotation {
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
+        
+        locCoordinate = CLLocationCoordinate2DMake(latitude, longitude)
     }
     
     init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
@@ -40,11 +44,15 @@ class Pin: NSManagedObject, MKAnnotation {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
         
         // Dictionary
-        //print(entity)
+        id = currentTimeMillis()
         latitude = dictionary[Keys.latitude] as! Double
         longitude = dictionary[Keys.longitude] as! Double
         
         locCoordinate = CLLocationCoordinate2DMake(latitude, longitude)
     }
     
+    func currentTimeMillis() -> Int64{
+        let nowDouble = NSDate().timeIntervalSince1970
+        return Int64(nowDouble*1000)
+    }
 }
